@@ -1,0 +1,9 @@
+-Iinclude
+-Iinclude/dummy_headers
+-Imm-decomp/include
+-Imm-decomp/src
+-Imm-decomp/extracted/n64-us
+-DF3DEX_GBI_2
+-D_LANGUAGE_C
+-DMIPS
+--std=c99
