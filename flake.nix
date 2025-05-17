@@ -25,17 +25,37 @@
           config.allowUnfree = true;
           overlays = [(import ./nix/pkgs/overlay.nix)];
         };
+
+        nativeBuildInputs = [
+          pkgs.gnumake
+          pkgs.zip
+          pkgs.unzip
+          pkgs.n64recomp
+          pkgs.llvmPackages.clang-unwrapped
+          pkgs.llvmPackages.lld
+        ];
       in {
         formatter = pkgs.alejandra;
 
-        packages = import ./nix/pkgs/all-packages.nix {inherit pkgs;};
+        packages =
+          import ./nix/pkgs/all-packages.nix {inherit pkgs;}
+          // {
+            build = pkgs.writeShellApplication {
+              name = "build";
+              runtimeInputs = nativeBuildInputs;
+              text = ''
+                make -j"$NIX_BUILD_CORES"
+                exec RecompModTool ./mod.toml ./build/
+              '';
+            };
 
-        devShells.default = pkgs.mkShell.override {stdenv = pkgs.clangStdenv;} {
-          buildInputs = [
-            pkgs.gnumake
-            pkgs.zip
-            pkgs.n64recomp
-          ];
+            clean = pkgs.writeShellScriptBin "clean" ''
+              rm -r ./build/
+            '';
+          };
+
+        devShells.default = pkgs.mkShell.override {stdenv = pkgs.stdenvNoCC;} {
+          buildInputs = nativeBuildInputs ++ [pkgs.clang-tools];
         };
       };
     };
