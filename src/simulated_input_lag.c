@@ -51,7 +51,7 @@ RECOMP_HOOK_RETURN("PadMgr_GetInput") void get_input_return_hook(void) {
     if (num_frames == 0) {
         return;
     }
-    
+
     Input new_input;
     memcpy(&new_input, &arg_inputs[0], sizeof(Input));
 
