@@ -9,8 +9,10 @@
 *.exp
 ./funcs.h
 patches.map
-build/
 .vscode/settings.json
+
+.zig-cache/
+zig-out/
 
 .direnv
 /result

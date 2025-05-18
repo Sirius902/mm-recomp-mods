@@ -46,14 +46,14 @@ native_libraries = [
 [inputs]
 
 # Input elf file to generate a mod from.
-elf_path = "build/mod.elf"
+elf_path = "../../zig-out/bin/simulated-input-lag/mod.elf"
 
 # Output mod filename.
 mod_filename = "mm_recomp_simulated_input_lag"
 
 # Reference symbol files.
-func_reference_syms_file = "Zelda64RecompSyms/mm.us.rev1.syms.toml"
-data_reference_syms_files = [ "Zelda64RecompSyms/mm.us.rev1.datasyms.toml", "Zelda64RecompSyms/mm.us.rev1.datasyms_static.toml" ]
+func_reference_syms_file = "../../Zelda64RecompSyms/mm.us.rev1.syms.toml"
+data_reference_syms_files = [ "../../Zelda64RecompSyms/mm.us.rev1.datasyms.toml", "../../Zelda64RecompSyms/mm.us.rev1.datasyms_static.toml" ]
 
 # Additional files to include in the mod.
 additional_files = [ ]

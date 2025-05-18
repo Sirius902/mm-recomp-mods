@@ -27,35 +27,20 @@
         };
 
         nativeBuildInputs = [
-          pkgs.gnumake
-          pkgs.zip
-          pkgs.unzip
+          # pkgs.zip
+          # pkgs.unzip
           pkgs.n64recomp
+          pkgs.zig
           pkgs.llvmPackages.clang-unwrapped
           pkgs.llvmPackages.lld
         ];
       in {
         formatter = pkgs.alejandra;
 
-        packages =
-          import ./nix/pkgs/all-packages.nix {inherit pkgs;}
-          // {
-            build = pkgs.writeShellApplication {
-              name = "build";
-              runtimeInputs = nativeBuildInputs;
-              text = ''
-                make -j"$NIX_BUILD_CORES"
-                exec RecompModTool ./mod.toml ./build/
-              '';
-            };
-
-            clean = pkgs.writeShellScriptBin "clean" ''
-              rm -r ./build/
-            '';
-          };
+        packages = import ./nix/pkgs/all-packages.nix {inherit pkgs;};
 
         devShells.default = pkgs.mkShell.override {stdenv = pkgs.stdenvNoCC;} {
-          buildInputs = nativeBuildInputs ++ [pkgs.clang-tools];
+          buildInputs = nativeBuildInputs ++ [pkgs.zls pkgs.clang-tools];
         };
       };
     };

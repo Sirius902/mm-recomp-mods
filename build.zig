@@ -1,0 +1,147 @@
+const std = @import("std");
+
+pub fn build(b: *std.Build) !void {
+    const query: std.Target.Query = .{
+        .cpu_arch = .mips,
+        .os_tag = .freestanding,
+        .abi = .none,
+        .cpu_model = .{ .explicit = &std.Target.mips.cpu.mips2 },
+    };
+    const target = b.resolveTargetQuery(query);
+    const optimize = b.standardOptimizeOption(.{});
+
+    var mods_dir = try b.build_root.handle.openDir("mods", .{ .iterate = true });
+    defer mods_dir.close();
+
+    var it = mods_dir.iterate();
+    while (try it.next()) |entry| {
+        if (entry.kind == .directory) {
+            var entry_dir = try mods_dir.openDir(entry.name, .{});
+            defer entry_dir.close();
+
+            try buildMod(b, target, optimize, entry.name, &entry_dir);
+        }
+    }
+}
+
+fn buildMod(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+    name: []const u8,
+    dir: *std.fs.Dir,
+) !void {
+    const exe_mod = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .strip = true,
+        .unwind_tables = .none,
+        .omit_frame_pointer = true,
+    });
+
+    const c_flags = [_][]const u8{
+        "-G0",
+        "-mno-check-zero-division",
+        "-ffast-math",
+        "-fno-unsafe-math-optimizations",
+        "-fno-builtin-memset",
+        "-Wall",
+        "-Wextra",
+        "-Wno-incompatible-library-redeclaration",
+        "-Wno-unused-parameter",
+        "-Wno-unknown-pragmas",
+        "-Wno-unused-variable",
+        "-Wno-missing-braces",
+        "-Wno-unsupported-floating-point-opt",
+        "-Werror=section",
+    };
+
+    const cpp_flags = [_][]const u8{
+        "-D_LANGUAGE_C",
+        "-DMIPS",
+        "-DF3DEX_GBI_2",
+        "-DF3DEX_GBI_PL",
+        "-DGBI_DOWHILE",
+    };
+
+    const flags = c_flags ++ cpp_flags;
+
+    {
+        var src_dir = try dir.openDir("src", .{ .iterate = true });
+        defer src_dir.close();
+
+        var it = src_dir.iterate();
+        while (try it.next()) |entry| {
+            if (entry.kind == .file and std.mem.eql(u8, std.fs.path.extension(entry.name), ".c")) {
+                const path = src_dir.realpathAlloc(b.allocator, entry.name) catch @panic("OOM");
+
+                exe_mod.addCSourceFile(.{
+                    .file = .{ .cwd_relative = path },
+                    .flags = &flags,
+                    .language = .c,
+                });
+            }
+        }
+    }
+
+    const include_paths = [_][]const u8{
+        "include",
+        "include/dummy_headers",
+        "mm-decomp/include",
+        "mm-decomp/src",
+        "mm-decomp/extracted/n64-us",
+        "mm-decomp/include/libc",
+    };
+
+    for (include_paths) |path| {
+        exe_mod.addIncludePath(b.path(path));
+    }
+
+    const exe_obj = b.addObject(.{
+        .name = "mod",
+        .root_module = exe_mod,
+    });
+
+    const temp_path = b.makeTempPath();
+    const map_path = b.pathJoin(&[_][]const u8{ temp_path, "mod.map" });
+    const elf_path = b.pathJoin(&[_][]const u8{ temp_path, "mod.elf" });
+
+    const link_elf = b.addSystemCommand(&[_][]const u8{
+        "ld.lld",
+        "--nostdlib",
+        "-T",
+        "mod.ld",
+        "--unresolved-symbols=ignore-all",
+        "--emit-relocs",
+        "--no-nmagic",
+        "-e",
+        "0",
+        "-Map",
+        map_path,
+        "-o",
+        elf_path,
+    });
+    link_elf.addFileArg(exe_obj.getEmittedBin());
+    link_elf.step.dependOn(&exe_obj.step);
+
+    const install_elf = b.addInstallBinFile(
+        .{ .cwd_relative = elf_path },
+        b.pathJoin(&[_][]const u8{ name, "mod.elf" }),
+    );
+    install_elf.step.dependOn(&link_elf.step);
+
+    const install_map = b.addInstallBinFile(
+        .{ .cwd_relative = map_path },
+        b.pathJoin(&[_][]const u8{ name, "mod.map" }),
+    );
+    install_map.step.dependOn(&link_elf.step);
+
+    const mod_toml_path = dir.realpathAlloc(b.allocator, "mod.toml") catch @panic("OOM");
+
+    const mod_tool_step = b.addSystemCommand(&[_][]const u8{"RecompModTool"});
+    mod_tool_step.addFileArg(.{ .cwd_relative = mod_toml_path });
+    mod_tool_step.addDirectoryArg(.{ .cwd_relative = b.getInstallPath(.bin, name) });
+    mod_tool_step.step.dependOn(&install_elf.step);
+    mod_tool_step.step.dependOn(&install_map.step);
+    b.getInstallStep().dependOn(&mod_tool_step.step);
+}
