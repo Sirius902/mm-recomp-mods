@@ -1,5 +1,5 @@
 {
-  description = "MMRecompInputLag flake";
+  description = "MMRecompMods flake";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
