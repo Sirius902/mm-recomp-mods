@@ -56,7 +56,7 @@ stdenv.mkDerivation (finalAttrs: {
     ];
     maintainers = with lib.maintainers; [qubitnano];
     mainProgram = "N64Recomp";
-    platforms = lib.platforms.linux;
+    platforms = lib.platforms.linux ++ lib.platforms.darwin;
     hydraPlatforms = [];
   };
 })
