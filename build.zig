@@ -42,9 +42,21 @@ fn buildMod(
     const exe_mod = b.createModule(.{
         .target = target,
         .optimize = optimize,
+        .link_libc = false,
+        .link_libcpp = false,
+        .single_threaded = true,
         .strip = true,
         .unwind_tables = .none,
+        .stack_protector = false,
+        .stack_check = false,
+        .sanitize_c = false,
+        .sanitize_thread = false,
+        .fuzz = false,
+        .valgrind = false,
+        .pic = false,
+        .red_zone = false,
         .omit_frame_pointer = true,
+        .error_tracing = false,
     });
 
     const c_flags = [_][]const u8{
