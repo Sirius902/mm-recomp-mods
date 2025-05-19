@@ -27,11 +27,8 @@
         };
 
         nativeBuildInputs = [
-          # pkgs.zip
-          # pkgs.unzip
           pkgs.n64recomp
           pkgs.zig
-          pkgs.llvmPackages.clang-unwrapped
           pkgs.llvmPackages.lld
         ];
       in {
