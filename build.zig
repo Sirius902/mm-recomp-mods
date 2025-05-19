@@ -10,16 +10,24 @@ pub fn build(b: *std.Build) !void {
     const target = b.resolveTargetQuery(query);
     const optimize = b.standardOptimizeOption(.{});
 
-    var mods_dir = try b.build_root.handle.openDir("mods", .{ .iterate = true });
-    defer mods_dir.close();
+    const mod_opt = b.option([]const u8, "mod", "The mod to build.");
+    if (mod_opt) |mod| {
+        var mod_dir = try b.build_root.handle.openDir(b.pathJoin(&[_][]const u8{ "mods", mod }), .{});
+        defer mod_dir.close();
 
-    var it = mods_dir.iterate();
-    while (try it.next()) |entry| {
-        if (entry.kind == .directory) {
-            var entry_dir = try mods_dir.openDir(entry.name, .{});
-            defer entry_dir.close();
+        try buildMod(b, target, optimize, mod, &mod_dir);
+    } else {
+        var mods_dir = try b.build_root.handle.openDir("mods", .{ .iterate = true });
+        defer mods_dir.close();
 
-            try buildMod(b, target, optimize, entry.name, &entry_dir);
+        var it = mods_dir.iterate();
+        while (try it.next()) |entry| {
+            if (entry.kind == .directory) {
+                var entry_dir = try mods_dir.openDir(entry.name, .{});
+                defer entry_dir.close();
+
+                try buildMod(b, target, optimize, entry.name, &entry_dir);
+            }
         }
     }
 }
@@ -102,36 +110,34 @@ fn buildMod(
         .root_module = exe_mod,
     });
 
-    const temp_path = b.makeTempPath();
-    const map_path = b.pathJoin(&[_][]const u8{ temp_path, "mod.map" });
-    const elf_path = b.pathJoin(&[_][]const u8{ temp_path, "mod.elf" });
-
     const link_elf = b.addSystemCommand(&[_][]const u8{
         "ld.lld",
         "--nostdlib",
         "-T",
-        "mod.ld",
+    });
+    link_elf.addFileArg(b.path("mod.ld"));
+    link_elf.addArgs(&[_][]const u8{
         "--unresolved-symbols=ignore-all",
         "--emit-relocs",
         "--no-nmagic",
         "-e",
         "0",
         "-Map",
-        map_path,
-        "-o",
-        elf_path,
     });
+    const map_path = link_elf.addOutputFileArg("mod.map");
+    link_elf.addArg("-o");
+    const elf_path = link_elf.addOutputFileArg("mod.elf");
     link_elf.addFileArg(exe_obj.getEmittedBin());
     link_elf.step.dependOn(&exe_obj.step);
 
     const install_elf = b.addInstallBinFile(
-        .{ .cwd_relative = elf_path },
+        elf_path,
         b.pathJoin(&[_][]const u8{ name, "mod.elf" }),
     );
     install_elf.step.dependOn(&link_elf.step);
 
     const install_map = b.addInstallBinFile(
-        .{ .cwd_relative = map_path },
+        map_path,
         b.pathJoin(&[_][]const u8{ name, "mod.map" }),
     );
     install_map.step.dependOn(&link_elf.step);
