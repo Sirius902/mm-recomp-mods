@@ -3,6 +3,8 @@
     .version = "0.1.0",
     .fingerprint = 0x9538780397f6146,
     .minimum_zig_version = "0.14.0",
-    .dependencies = .{},
+    .dependencies = .{
+        .recomp = .{ .path = "pkg/recomp" },
+    },
     .paths = .{""},
 }

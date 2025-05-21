@@ -39,7 +39,21 @@ fn buildMod(
     name: []const u8,
     dir: *std.fs.Dir,
 ) !void {
+    var src_dir = try dir.openDir("src", .{ .iterate = true });
+    defer src_dir.close();
+
+    const root_source_file: ?std.Build.LazyPath = blk: {
+        const root_zig = "root.zig";
+        if (src_dir.access(root_zig, .{})) {
+            const path = src_dir.realpathAlloc(b.allocator, root_zig) catch @panic("OOM");
+            break :blk .{ .cwd_relative = path };
+        } else |_| {
+            break :blk null;
+        }
+    };
+
     const exe_mod = b.createModule(.{
+        .root_source_file = root_source_file,
         .target = target,
         .optimize = optimize,
         .link_libc = false,
@@ -59,6 +73,10 @@ fn buildMod(
         .omit_frame_pointer = true,
         .error_tracing = false,
     });
+
+    if (root_source_file) |_| {
+        exe_mod.addImport("recomp", b.dependency("recomp", .{}).module("recomp"));
+    }
 
     const c_flags = [_][]const u8{
         "-G0",
@@ -87,21 +105,16 @@ fn buildMod(
 
     const flags = c_flags ++ cpp_flags;
 
-    {
-        var src_dir = try dir.openDir("src", .{ .iterate = true });
-        defer src_dir.close();
+    var it = src_dir.iterate();
+    while (try it.next()) |entry| {
+        if (entry.kind == .file and std.mem.eql(u8, std.fs.path.extension(entry.name), ".c")) {
+            const path = src_dir.realpathAlloc(b.allocator, entry.name) catch @panic("OOM");
 
-        var it = src_dir.iterate();
-        while (try it.next()) |entry| {
-            if (entry.kind == .file and std.mem.eql(u8, std.fs.path.extension(entry.name), ".c")) {
-                const path = src_dir.realpathAlloc(b.allocator, entry.name) catch @panic("OOM");
-
-                exe_mod.addCSourceFile(.{
-                    .file = .{ .cwd_relative = path },
-                    .flags = &flags,
-                    .language = .c,
-                });
-            }
+            exe_mod.addCSourceFile(.{
+                .file = .{ .cwd_relative = path },
+                .flags = &flags,
+                .language = .c,
+            });
         }
     }
 
