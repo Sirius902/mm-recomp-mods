@@ -4,13 +4,13 @@ const recomp = @import("recomp");
 // bitfields in `gbi.h`.
 // https://github.com/ziglang/zig/issues/1499
 
-fn on_init() linksection(recomp.callback("*", "recomp_on_init")) callconv(.C) void {
+fn onInit() linksection(recomp.callbackSection("*", "recomp_on_init")) callconv(.C) void {
     _ = recomp.printf("Hello from Zig!\n");
 }
 
 comptime {
-    @export(&on_init, .{
-        .name = "on_init",
+    @export(&onInit, .{
+        .name = "onInit",
         .linkage = .weak,
     });
 }

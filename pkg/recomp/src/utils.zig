@@ -1,6 +1,6 @@
 const modding = @import("modding.zig");
 
-pub noinline fn alloc(size: c_ulong) linksection(modding.import("*")) callconv(.C) *anyopaque {
+pub noinline fn alloc(size: c_ulong) linksection(modding.importSection("*")) callconv(.C) *anyopaque {
     _ = size;
     unreachable;
 }
@@ -12,7 +12,7 @@ comptime {
     });
 }
 
-pub noinline fn free(memory: *anyopaque) linksection(modding.import("*")) callconv(.C) void {
+pub noinline fn free(memory: *anyopaque) linksection(modding.importSection("*")) callconv(.C) void {
     _ = memory;
     unreachable;
 }
@@ -24,7 +24,7 @@ comptime {
     });
 }
 
-pub noinline fn printf(fmt: [*:0]const u8, ...) linksection(modding.import("*")) callconv(.C) c_int {
+pub noinline fn printf(fmt: [*:0]const u8, ...) linksection(modding.importSection("*")) callconv(.C) c_int {
     _ = fmt;
     unreachable;
 }
