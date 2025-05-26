@@ -5,5 +5,7 @@
 
 RECOMP_HOOK("Player_UpdateInterface")
 void update_interface_hook(PlayState* play, Player* this) {
-    this->putAwayCooldownTimer = 0;
+    if (recomp_get_config_u32("instant_putaway")) {
+        this->putAwayCooldownTimer = 0;
+    }
 }

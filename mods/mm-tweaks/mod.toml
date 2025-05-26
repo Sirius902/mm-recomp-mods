@@ -5,21 +5,24 @@
 
 # Unique ID of this mod. Pick something long enough that it'll never be the same as any other mod.
 # The name displayed in the mod management menu is separate from this so this doesn't need to be human readable.
-id = "mm_recomp_instant_putaway"
+id = "mm_recomp_sirius_tweaks"
 
 # Version of this mod.
 version = "1.0.0"
 
 # The name that will show up for this mod in the mod menu. This should be human readable.
-display_name = "Instant Putaway"
+display_name = "MM Tweaks"
 
 # The description that will show up when this mod is displayed in the mod menu. This should be human readable.
 description =  """
-Instant putaway."""
+This mod provides various tweaks such as:
+- Simulated Input Delay
+- Instant Putaway
+- Instant Blast Mask"""
 
 # A short description that will show up in this mod's entry in the mod list. This should be human readable and kept short
 # to prevent it from being cut off due to the limited space.
-short_description = "Instant putaway."
+short_description = "Provides various tweaks."
 
 # Authors of this mod.
 authors = [ "Sirius902" ]
@@ -46,10 +49,10 @@ native_libraries = [
 [inputs]
 
 # Input elf file to generate a mod from.
-elf_path = "../../zig-out/bin/instant-putaway/mod.elf"
+elf_path = "../../zig-out/bin/mm-tweaks/mod.elf"
 
 # Output mod filename.
-mod_filename = "mm_recomp_instant_putaway"
+mod_filename = "mm_recomp_mm_tweaks"
 
 # Reference symbol files.
 func_reference_syms_file = "../../Zelda64RecompSyms/mm.us.rev1.syms.toml"
@@ -57,3 +60,31 @@ data_reference_syms_files = [ "../../Zelda64RecompSyms/mm.us.rev1.datasyms.toml"
 
 # Additional files to include in the mod.
 additional_files = [ ]
+
+[[manifest.config_options]]
+id = "input_delay_num_frames"
+name = "Simulated Input Delay"
+description = "Input is delayed by this many frames."
+type = "Number"
+min = 0
+max = 10
+step = 1
+precision = 1
+percent = false
+default = 0
+
+[[manifest.config_options]]
+id = "instant_putaway"
+name = "Instant Putaway"
+description = "Items can be put away instantly."
+type = "Enum"
+options = [ "Off", "On" ]
+default = "Off"
+
+[[manifest.config_options]]
+id = "instant_blast_mask"
+name = "Instant Blast Mask"
+description = "Blast Mask has no cooldown."
+type = "Enum"
+options = [ "Off", "On" ]
+default = "Off"

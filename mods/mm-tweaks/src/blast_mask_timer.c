@@ -5,5 +5,7 @@
 
 RECOMP_HOOK("Player_ProcessItemButtons")
 void process_item_buttons_hook(Player* this, PlayState* play) {
-    this->blastMaskTimer = 0;
+    if (recomp_get_config_u32("instant_blast_mask")) {
+        this->blastMaskTimer = 0;
+    }
 }

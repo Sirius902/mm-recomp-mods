@@ -22,7 +22,7 @@ RECOMP_HOOK("PadMgr_GetInput") void get_input_hook(Input* inputs, s32 gameReques
 
     Lib_MemCpy(&hook_prev_input, &inputs[0], sizeof(Input));
 
-    size_t num_frames = (size_t)recomp_get_config_double("num_frames");
+    size_t num_frames = (size_t)recomp_get_config_double("input_delay_num_frames");
     InputQueue_SetDelay(num_frames);
 }
 
