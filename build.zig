@@ -6,6 +6,7 @@ pub fn build(b: *std.Build) !void {
         .os_tag = .freestanding,
         .abi = .none,
         .cpu_model = .{ .explicit = &std.Target.mips.cpu.mips2 },
+        .cpu_features_add = std.Target.mips.featureSet(&.{.fpxx}),
     };
     const target = b.resolveTargetQuery(query);
     const optimize = b.standardOptimizeOption(.{});
