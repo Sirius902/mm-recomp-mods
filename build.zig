@@ -82,7 +82,6 @@ fn buildMod(
     const c_flags = [_][]const u8{
         "-G0",
         "-mno-check-zero-division",
-        "-ffast-math",
         "-fno-unsafe-math-optimizations",
         "-fno-builtin-memset",
         "-Wall",
