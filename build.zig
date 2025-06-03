@@ -135,6 +135,18 @@ fn buildMod(
         .root_module = exe_mod,
     });
 
+    // FUTURE(Sirius902) Would love to enable this. Problem is we get these
+    // weird errors.
+    //
+    // ```
+    // Reloc at address 0x81048FD0 references section .bss.compiler_rt.atomics.spinlocks, which didn't get mapped to an output section
+    // ```
+    //
+    // If you then work around that by putting `.bss*` under `.data` it
+    // generates a `c.un.s` instruction which the recompiler doesn't support
+    // yet so the mod fails to load.
+    // exe_obj.bundle_compiler_rt = true;
+
     const link_elf = b.addSystemCommand(&[_][]const u8{
         "ld.lld",
         "--nostdlib",
