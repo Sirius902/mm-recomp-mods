@@ -5,14 +5,14 @@
 
 #include "libc/string.h"
 
-#include "input_queue.h"
+#include "root.h"
 
 static s32 arg_game_request;
 static Input* arg_inputs;
 
 static Input hook_prev_input;
 
-RECOMP_HOOK("PadMgr_GetInput") void get_input_hook(Input* inputs, s32 gameRequest) {
+RECOMP_HOOK("PadMgr_GetInput") void sid_get_input_hook(Input* inputs, s32 gameRequest) {
     if (!gameRequest) {
         return;
     }
@@ -26,7 +26,7 @@ RECOMP_HOOK("PadMgr_GetInput") void get_input_hook(Input* inputs, s32 gameReques
     InputQueue_SetDelay(num_frames);
 }
 
-RECOMP_HOOK_RETURN("PadMgr_GetInput") void get_input_return_hook(void) {
+RECOMP_HOOK_RETURN("PadMgr_GetInput") void sid_get_input_return_hook(void) {
     if (!arg_game_request) {
         return;
     }

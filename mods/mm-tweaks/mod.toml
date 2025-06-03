@@ -17,6 +17,7 @@ display_name = "MM Tweaks"
 description =  """
 This mod provides various tweaks such as:
 - Simulated Input Delay
+- Virtual Notches
 - Instant Putaway
 - Instant Blast Mask"""
 
@@ -69,6 +70,18 @@ type = "Number"
 min = 0
 max = 10
 step = 1
+precision = 1
+percent = false
+default = 0
+
+[[manifest.config_options]]
+id = "virtual_notch_degrees"
+name = "Virtual Notches"
+description = "The angle range in degrees of the notches."
+type = "Number"
+min = 0
+max = 45
+step = 0.1
 precision = 1
 percent = false
 default = 0

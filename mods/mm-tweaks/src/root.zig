@@ -1,5 +1,6 @@
 const std = @import("std");
 const recomp = @import("recomp");
+const math = @import("math.zig");
 const c = @cImport({
     @cDefine("_LANGUAGE_C", {});
     @cInclude("global.h");
@@ -42,4 +43,61 @@ export fn InputQueue_Pop(out: ?*c.Input) callconv(.C) bool {
     }
 
     return false;
+}
+
+const Notch = struct {
+    stick_x: i8,
+    stick_y: i8,
+    angle: f64,
+};
+
+const max_axis = 85.0;
+
+const notches = blk: {
+    var ns: [8]Notch = undefined;
+
+    for (&ns, 0..) |*notch, i| {
+        const angle = @as(f64, @floatFromInt(i)) * (std.math.pi / 4.0);
+        notch.* = .{
+            .stick_x = std.math.round(max_axis * std.math.cos(angle)),
+            .stick_y = std.math.round(max_axis * std.math.sin(angle)),
+            .angle = angle,
+        };
+    }
+
+    break :blk ns;
+};
+
+export fn VirtualNotches_Apply(input: ?*c.Input, degrees: f64) callconv(.C) void {
+    const notch_activation_range = 0.9;
+
+    const x = &input.?.cur.stick_x;
+    const y = &input.?.cur.stick_y;
+
+    const fx: f64 = @floatFromInt(x.*);
+    const fy: f64 = @floatFromInt(y.*);
+
+    const mag = std.math.sqrt(fx * fx + fy * fy) / max_axis;
+    if (mag < notch_activation_range) {
+        return;
+    }
+
+    const stick_angle = blk: {
+        const angle = math.atan2(y.*, x.*);
+        // Ensure stick angle is in [0, 2pi) to match notch angles.
+        break :blk if (angle >= 0.0)
+            angle
+        else
+            angle + 2.0 * std.math.pi;
+    };
+
+    const notch_size = std.math.degreesToRadians(degrees);
+
+    for (&notches) |notch| {
+        if (@abs(notch.angle - stick_angle) < notch_size * 0.5) {
+            x.* = notch.stick_x;
+            y.* = notch.stick_y;
+            break;
+        }
+    }
 }
