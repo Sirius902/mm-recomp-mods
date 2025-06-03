@@ -59,7 +59,6 @@ fn buildMod(
         .optimize = optimize,
         .link_libc = false,
         .link_libcpp = false,
-        // FUTURE(Sirius902) Is this correct?
         .single_threaded = true,
         .strip = true,
         .unwind_tables = .none,
