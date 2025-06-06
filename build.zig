@@ -1,4 +1,5 @@
 const std = @import("std");
+const ZigLibDir = @import("build/ZigLibDir.zig");
 
 pub fn build(b: *std.Build) !void {
     const query: std.Target.Query = .{
@@ -11,12 +12,14 @@ pub fn build(b: *std.Build) !void {
     const target = b.resolveTargetQuery(query);
     const optimize = b.standardOptimizeOption(.{});
 
+    const compiler_rt_obj = try compilerRtStep(b, target, optimize);
+
     const mod_opt = b.option([]const u8, "mod", "The mod to build.");
     if (mod_opt) |mod| {
         var mod_dir = try b.build_root.handle.openDir(b.pathJoin(&[_][]const u8{ "mods", mod }), .{});
         defer mod_dir.close();
 
-        try buildMod(b, target, optimize, mod, &mod_dir);
+        try buildMod(b, target, optimize, compiler_rt_obj, mod, &mod_dir);
     } else {
         var mods_dir = try b.build_root.handle.openDir("mods", .{ .iterate = true });
         defer mods_dir.close();
@@ -27,16 +30,66 @@ pub fn build(b: *std.Build) !void {
                 var entry_dir = try mods_dir.openDir(entry.name, .{});
                 defer entry_dir.close();
 
-                try buildMod(b, target, optimize, entry.name, &entry_dir);
+                try buildMod(b, target, optimize, compiler_rt_obj, entry.name, &entry_dir);
             }
         }
     }
+}
+
+/// Creates object file for stripped down version of `compiler_rt`.
+fn compilerRtStep(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) !*std.Build.Step.Compile {
+    const zig_lib_dir = try ZigLibDir.create(b);
+
+    const write_rt = b.addWriteFiles();
+    _ = write_rt.addCopyDirectory(
+        try zig_lib_dir.getLibPath().join(b.allocator, "compiler_rt"),
+        "compiler_rt/compiler_rt",
+        .{},
+    );
+    const compiler_rt_root_src = write_rt.addCopyFile(
+        b.path("build/compiler_rt.zig"),
+        "compiler_rt/compiler_rt.zig",
+    );
+
+    const compiler_rt_mod = b.createModule(.{
+        .root_source_file = compiler_rt_root_src,
+        .target = target,
+        .optimize = optimize,
+        .link_libc = false,
+        .link_libcpp = false,
+        .single_threaded = true,
+        .strip = true,
+        .unwind_tables = .none,
+        .stack_protector = false,
+        .stack_check = false,
+        .sanitize_c = false,
+        .sanitize_thread = false,
+        .fuzz = false,
+        .valgrind = false,
+        .pic = false,
+        .red_zone = false,
+        .omit_frame_pointer = true,
+        .error_tracing = false,
+    });
+
+    const compiler_rt_obj = b.addObject(.{
+        .name = "compiler_rt",
+        .root_module = compiler_rt_mod,
+    });
+    compiler_rt_obj.step.dependOn(&write_rt.step);
+
+    return compiler_rt_obj;
 }
 
 fn buildMod(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
+    compiler_rt_obj: *std.Build.Step.Compile,
     name: []const u8,
     dir: *std.fs.Dir,
 ) !void {
@@ -135,18 +188,6 @@ fn buildMod(
         .root_module = exe_mod,
     });
 
-    // FUTURE(Sirius902) Would love to enable this. Problem is we get these
-    // weird errors.
-    //
-    // ```
-    // Reloc at address 0x81048FD0 references section .bss.compiler_rt.atomics.spinlocks, which didn't get mapped to an output section
-    // ```
-    //
-    // If you then work around that by putting `.bss*` under `.data` it
-    // generates a `c.un.s` instruction which the recompiler doesn't support
-    // yet so the mod fails to load.
-    // exe_obj.bundle_compiler_rt = true;
-
     const link_elf = b.addSystemCommand(&[_][]const u8{
         "ld.lld",
         "--nostdlib",
@@ -165,6 +206,12 @@ fn buildMod(
     link_elf.addArg("-o");
     const elf_path = link_elf.addOutputFileArg("mod.elf");
     link_elf.addFileArg(exe_obj.getEmittedBin());
+
+    // If the mod contains Zig source link compiler_rt.
+    if (root_source_file) |_| {
+        link_elf.addFileArg(compiler_rt_obj.getEmittedBin());
+        link_elf.step.dependOn(&compiler_rt_obj.step);
+    }
     link_elf.step.dependOn(&exe_obj.step);
 
     const install_elf = b.addInstallBinFile(

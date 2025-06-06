@@ -30,6 +30,7 @@
           pkgs.n64recomp
           pkgs.zig
           pkgs.llvmPackages.lld
+          pkgs.llvmPackages.bintoolsNoLibc
         ];
       in {
         formatter = pkgs.alejandra;
