@@ -19,6 +19,7 @@ This mod provides various tweaks such as:
 - Simulated Input Delay
 - Virtual Notches
 - Instant Putaway
+- Instant Zora Boomerang Recall
 - Instant Blast Mask"""
 
 # A short description that will show up in this mod's entry in the mod list. This should be human readable and kept short
@@ -90,6 +91,14 @@ default = 0
 id = "instant_putaway"
 name = "Instant Putaway"
 description = "Items can be put away instantly."
+type = "Enum"
+options = [ "Off", "On" ]
+default = "Off"
+
+[[manifest.config_options]]
+id = "instant_recall"
+name = "Instant Zora Boomerang Recall"
+description = "Zora Boomerangs can be instantly recalled with B."
 type = "Enum"
 options = [ "Off", "On" ]
 default = "Off"
