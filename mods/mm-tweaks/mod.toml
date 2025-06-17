@@ -20,7 +20,8 @@ This mod provides various tweaks such as:
 - Virtual Notches
 - Instant Putaway
 - Instant Zora Boomerang Recall
-- Instant Blast Mask"""
+- Instant Blast Mask
+- Fierce Deity Z-Targeting Speed Fix"""
 
 # A short description that will show up in this mod's entry in the mod list. This should be human readable and kept short
 # to prevent it from being cut off due to the limited space.
@@ -107,6 +108,14 @@ default = "Off"
 id = "instant_blast_mask"
 name = "Instant Blast Mask"
 description = "Blast Mask has no cooldown."
+type = "Enum"
+options = [ "Off", "On" ]
+default = "Off"
+
+[[manifest.config_options]]
+id = "fd_speed_fix"
+name = "Fierce Deity Z-Targeting Speed Fix"
+description = "Fixes Fierce Deity movement being choppy when Z-targeting."
 type = "Enum"
 options = [ "Off", "On" ]
 default = "Off"
