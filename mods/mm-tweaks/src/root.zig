@@ -1,6 +1,5 @@
 const std = @import("std");
 const recomp = @import("recomp");
-const math = @import("math.zig");
 const c = @cImport({
     @cDefine("_LANGUAGE_C", {});
     @cInclude("global.h");
@@ -83,7 +82,7 @@ export fn VirtualNotches_Apply(input: ?*c.Input, degrees: f64) callconv(.C) void
     }
 
     const stick_angle = blk: {
-        const angle = math.atan2(y.*, x.*);
+        const angle: f64 = @floatCast(c.Math_FAtan2F(@floatCast(fy), @floatCast(fx)));
         // Ensure stick angle is in [0, 2pi) to match notch angles.
         break :blk if (angle >= 0.0)
             angle
