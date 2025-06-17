@@ -82,7 +82,7 @@ export fn VirtualNotches_Apply(input: ?*c.Input, degrees: f64) callconv(.c) void
     }
 
     const stick_angle = blk: {
-        const angle: f64 = @floatCast(c.Math_FAtan2F(@floatCast(fy), @floatCast(fx)));
+        const angle = std.math.atan2(fy, fx);
         // Ensure stick angle is in [0, 2pi) to match notch angles.
         break :blk if (angle >= 0.0)
             angle
