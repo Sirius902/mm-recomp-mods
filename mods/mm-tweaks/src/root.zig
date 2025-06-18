@@ -16,13 +16,13 @@ fn pruneQueue() void {
     }
 }
 
-export fn InputQueue_SetDelay(frames: usize) callconv(.C) void {
+export fn InputQueue_SetDelay(frames: usize) callconv(.c) void {
     input_queue.ensureTotalCapacity(frames) catch @panic("OOM");
     delay_frames = frames;
     pruneQueue();
 }
 
-export fn InputQueue_Push(input: ?*const c.Input) callconv(.C) void {
+export fn InputQueue_Push(input: ?*const c.Input) callconv(.c) void {
     pruneQueue();
     if (input_queue.items.len == delay_frames) {
         _ = input_queue.pop();
@@ -31,7 +31,7 @@ export fn InputQueue_Push(input: ?*const c.Input) callconv(.C) void {
     input_queue.insert(0, input.?.*) catch @panic("OOM");
 }
 
-export fn InputQueue_Pop(out: ?*c.Input) callconv(.C) bool {
+export fn InputQueue_Pop(out: ?*c.Input) callconv(.c) bool {
     if (input_queue.items.len < delay_frames) {
         return false;
     }
@@ -67,7 +67,7 @@ const notches = blk: {
     break :blk ns;
 };
 
-export fn VirtualNotches_Apply(input: ?*c.Input, degrees: f64) callconv(.C) void {
+export fn VirtualNotches_Apply(input: ?*c.Input, degrees: f64) callconv(.c) void {
     const notch_activation_range = 0.9;
 
     const x = &input.?.cur.stick_x;
