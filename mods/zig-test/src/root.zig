@@ -1,11 +1,10 @@
+const math = @import("math.zig");
 const recomp = @import("recomp");
 
-// FUTURE(Sirius902) `PlayState` does not work with translate-c because of
-// bitfields in `gbi.h`.
-// https://github.com/ziglang/zig/issues/1499
+extern fn bruh() callconv(.c) f64;
 
 fn onInit() linksection(recomp.callbackSection("*", "recomp_on_init")) callconv(.c) void {
-    _ = recomp.printf("Hello from Zig!\n");
+    _ = recomp.printf("Hello from Zig! %f\n", math.atan2(bruh(), bruh()));
 }
 
 comptime {
