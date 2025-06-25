@@ -11,12 +11,12 @@
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "n64recomp";
-  version = "989a86b";
+  version = "0-unstable-2025-02-27";
 
   src = fetchFromGitHub {
     owner = "N64Recomp";
     repo = "N64Recomp";
-    rev = finalAttrs.version;
+    rev = "989a86b36912403cd323de884bf834f2605ea770";
     hash = "sha256-DlzqixK8qnKrwN5zAqaae2MoXLqIIIzIkReVSk2dDFg=";
     fetchSubmodules = true;
   };
@@ -42,7 +42,7 @@ stdenv.mkDerivation (finalAttrs: {
     runHook postInstall
   '';
 
-  passthru.updateScript = unstableGitUpdater {};
+  passthru.updateScript = unstableGitUpdater {hardcodeZeroVersion = true;};
 
   meta = {
     description = "Tool to statically recompile N64 games into native executables";
@@ -56,7 +56,7 @@ stdenv.mkDerivation (finalAttrs: {
     ];
     maintainers = with lib.maintainers; [qubitnano];
     mainProgram = "N64Recomp";
-    platforms = lib.platforms.linux ++ lib.platforms.darwin;
+    platforms = lib.platforms.linux;
     hydraPlatforms = [];
   };
 })
