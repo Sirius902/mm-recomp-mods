@@ -37,7 +37,12 @@
         packages = import ./nix/pkgs/all-packages.nix {inherit pkgs;};
 
         devShells.default = pkgs.mkShell.override {stdenv = pkgs.stdenvNoCC;} {
-          buildInputs = nativeBuildInputs ++ [pkgs.zls pkgs.clang-tools];
+          packages = [
+            pkgs.zls
+            pkgs.clang-tools
+          ];
+
+          buildInputs = nativeBuildInputs;
         };
       };
     };
