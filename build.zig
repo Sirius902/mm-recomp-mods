@@ -147,23 +147,16 @@ fn buildMod(
     // yet so the mod fails to load.
     // exe_obj.bundle_compiler_rt = true;
 
-    const link_elf = b.addSystemCommand(&[_][]const u8{
-        "ld.lld",
-        "--nostdlib",
-        "-T",
-    });
-    link_elf.addFileArg(b.path("mod.ld"));
+    const link_elf = b.addSystemCommand(&[_][]const u8{ "ld.lld", "--nostdlib" });
+    link_elf.addPrefixedFileArg("--script=", b.path("mod.ld"));
     link_elf.addArgs(&[_][]const u8{
         "--unresolved-symbols=ignore-all",
         "--emit-relocs",
         "--no-nmagic",
-        "-e",
-        "0",
-        "-Map",
+        "--entry=0",
     });
-    const map_path = link_elf.addOutputFileArg("mod.map");
-    link_elf.addArg("-o");
-    const elf_path = link_elf.addOutputFileArg("mod.elf");
+    const map_path = link_elf.addPrefixedOutputFileArg("--Map=", "mod.map");
+    const elf_path = link_elf.addPrefixedOutputFileArg("--output=", "mod.elf");
     link_elf.addFileArg(exe_obj.getEmittedBin());
     link_elf.step.dependOn(&exe_obj.step);
 
